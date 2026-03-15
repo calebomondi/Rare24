@@ -1,0 +1,37 @@
+{
+    "accountAssociation": {
+        "header": "eyJmaWQiOjExNDEzMTEsInR5cGUiOiJhdXRoIiwia2V5IjoiMHhiMzQ2OWM4NDU0RmI1NTAyQ2E1MDczMDEwNTZGMEFhMzg3MzY5RWE2In0",
+        "payload": "eyJkb21haW4iOiJyYXJlMjQueHl6In0",
+        "signature": "yg1j3rvFpeTsDJi1Kt7UPJRCOAb5w4XuxBcliZuP3Fs6rAHy/bwYbrwLKeRcJHhEETNAfFJj67Uki0DKkg2Bvhs="
+    },
+    "miniapp": {
+        "version": "1",
+        "name": "Rare24",
+        "homeUrl": "https://rare24.xyz",
+        "iconUrl": "https://rare24.xyz/icon.png",
+        "splashImageUrl": "https://rare24.xyz/splash.png",
+        "splashBackgroundColor": "#222222",
+        "subtitle": "Mint today's moments",
+        "description": "Mint exclusive photo NFTs from your favourite creators daily. Only one moment drops every 24 hours, collect, trade, and own rare memories",
+        "screenshotUrls": [
+            "https://rare24.xyz/s1.png",
+            "https://rare24.xyz/s2.png",
+            "https://rare24.xyz/s3.png"
+        ],
+        "primaryCategory": "social",
+        "tags": [
+            "NFT",
+            "photos",
+            "creators",
+            "rare",
+            "moments"
+        ],
+        "heroImageUrl": "https://rare24.xyz/hero.png",
+        "tagline": "Mint today's moments",
+        "ogTitle": "Rare24",
+        "ogDescription": "Mint exclusive photo NFTs daily. One moment drops every 24 hours. Collect, trade, own memories",
+        "ogImageUrl": "https://rare24.xyz/hero.png",
+        "webhookUrl": "https://rare24.xyz/api/webhook",
+        "noindex": false
+    }
+}

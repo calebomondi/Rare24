@@ -1,0 +1,18 @@
+# Root .gitignore
+
+# Dependencies
+**/node_modules
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.*.local
+**/.env.development
+**/.env.production
+
+# Next.js build output
+**/.next
+**/out
+
+# Misc
+**/.DS_Store
