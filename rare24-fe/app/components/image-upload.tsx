@@ -7,11 +7,12 @@ import { ImagePlus, Send, Replace, LoaderPinwheel, CircleCheck, CircleX } from "
 import { uploadImage } from "../backend/upload"
 import { getEthPrice } from "../backend/price"
 import { useConnection, Config } from 'wagmi'
-import { simulateContract, writeContract, waitForTransactionReceipt } from '@wagmi/core'
+import { simulateContract, writeContract, waitForTransactionReceipt, getAccount } from '@wagmi/core'
 import { formatEther, parseEther } from "viem"
 import { getCreatorMomentsCount, checkIfCanPost, revalidateCreatorMoments } from "../blockchain/getterHooks"
 import { RARE24_CONTRACT_ABI, RARE24_CONTRACT_ADDRESS } from "../blockchain/core"
 import { config } from "@/utils/wagmi"
+import { polkadotHubTestnet } from "@/utils/chains"
 import { useFarcasterStore } from "../store/useFarcasterStore"
 import { CanPost } from "../types/index.t"
 // import { saveUser } from "../backend/neon"
@@ -206,18 +207,23 @@ export function ImageUploadCard() {
         creators
       ] as const
 
+      // Get account to use for the transaction
+      const account = getAccount(config as any)
+
       // Execute contract transaction AND save user in parallel
-      const [receipt] = await Promise.all([
+      const [txReceipt] = await Promise.all([
         // Contract operations
         (async () => {
-          const { request } = await simulateContract(config as Config, {
+          const { request } = await simulateContract(config as any, {
+            chainId: polkadotHubTestnet.id,
+            account: account.address,
             abi: RARE24_CONTRACT_ABI,
             address: RARE24_CONTRACT_ADDRESS,
             functionName: 'uploadNft',
             args: contractArgs
           })
-          const hash = await writeContract(config as Config, request)
-          return await waitForTransactionReceipt(config as Config, { hash })
+          const hash = await writeContract(config as any, request)
+          return await waitForTransactionReceipt(config as any, { chainId: polkadotHubTestnet.id, hash })
         })(),
         
         // Save user to DB (independent operation)
@@ -230,7 +236,7 @@ export function ImageUploadCard() {
         }).catch(err => console.error("Failed to save user:", err))
       ])
 
-      if (!receipt) throw new Error("uploadNFT transaction failed!")
+      if (!txReceipt) throw new Error("uploadNFT transaction failed!")
 
       // Revalidate pages
       await Promise.all([
@@ -291,7 +297,7 @@ export function ImageUploadCard() {
                       <CircleCheck size={35} />
                     </span>
                     <span className="text-lg font-semibold">Successfully Shared Moment As NFT</span>
-                    <button onClick={() => route.push("/")} className="px-3 py-2 bg-green-600 rounded-lg text-white">
+                    <button onClick={() => window.location.href = "/"} className="px-3 py-2 bg-green-600 rounded-lg text-white">
                       Done
                     </button>
                   </div>

@@ -7,7 +7,7 @@ import { useConnection, useConnectors, useConnect, useSwitchChain } from 'wagmi'
 import { usePathname } from "next/navigation"
 import { useNotificationStore } from "../store/useFarcasterStore"
 import { checkNotification } from "../blockchain/getterHooks"
-import { base } from "viem/chains"
+import { polkadotHubTestnet } from "@/utils/chains"
 import ThemeToggle from "./theme-toggle"
 
 export default function TopBar() {
@@ -18,27 +18,24 @@ export default function TopBar() {
   const pathname = usePathname()
 
   const { setNotify, setLoading, notify, loading } = useNotificationStore()
-  const [hasAttemptedSwitch, setHasAttemptedSwitch] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  console.log(`address>: ${address} ${isConnected} ${chain?.name}`)
 
-  // Ensure component is mounted
   useEffect(() => {
     setMounted(true)
   }, [])
 
   // Switch network if needed
   useEffect(() => {
-    // Only switch if connected and not on Base
-    if (isConnected && chain?.id !== base.id && !hasAttemptedSwitch) {
-      switchChain({ chainId: base.id })
-      setHasAttemptedSwitch(true)
+    // Only switch if connected and not on polkadotHubTestnet
+    if (isConnected && chain?.id !== polkadotHubTestnet.id) {
+      switchChain({ chainId: polkadotHubTestnet.id })
     }
-  }, [isConnected, chain?.id, switchChain, hasAttemptedSwitch])
+  }, [isConnected, chain?.id, switchChain])
 
   // Check Notifications
   useEffect(() => {
+    if (!address) return
     try {
       const fetchData = async() => {
         setLoading(true)
@@ -53,7 +50,7 @@ export default function TopBar() {
     } finally {
       setLoading(false)
     }
-  }, [chain?.id])
+  }, [address, setNotify, setLoading])
 
   return (
     <header className="fixed top-0 left-0 right-0 border-b-1 dark:border-gray-600 border-border bg-background z-50">
@@ -99,7 +96,7 @@ export default function TopBar() {
             {
               !isConnected && mounted && (
                 <button 
-                  onClick={() => connect({ connector: connectors[0] })}
+                  onClick={() => connect({ connector: connectors[0], chainId: polkadotHubTestnet.id })}
                   disabled={isConnected}
                   className={``}
                 >
@@ -108,11 +105,10 @@ export default function TopBar() {
               ) 
             }
             {
-              isError && hasAttemptedSwitch && isConnected && (
+              isError && isConnected && (
                 <button 
                   onClick={() => {
-                    setHasAttemptedSwitch(false)
-                    switchChain({ chainId: base.id })
+                    switchChain({ chainId: polkadotHubTestnet.id })
                   }}
                   disabled={isConnected}
                   className={``}

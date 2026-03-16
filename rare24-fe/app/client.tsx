@@ -5,6 +5,7 @@ import { getFarcasterUser } from "./backend/farcasterUser";
 import { sdk } from "@farcaster/miniapp-sdk"
 import { useFarcasterStore } from "./store/useFarcasterStore";
 import { config } from "@/utils/wagmi";
+import { polkadotHubTestnet } from "@/utils/chains";
 import { simulateContract, writeContract, waitForTransactionReceipt } from "@wagmi/core"
 import { Config, useConnection, useConnect, useConnectors, useBalance } from "wagmi";
 import { RARE24_CONTRACT_ABI, RARE24_CONTRACT_ADDRESS } from "./blockchain/core";
@@ -32,6 +33,11 @@ export default function HomeClient({ sharedMoments } : { sharedMoments: SharedMo
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [inUsd, setInUsd] = useState("0")
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // console.log("Rendering HomeClient with moments:", JSON.stringify(sharedMoments[0].creator));
 
@@ -39,6 +45,7 @@ export default function HomeClient({ sharedMoments } : { sharedMoments: SharedMo
   const ethBalance = data ? Number(formatEther(data.value)) : 0
 
   useEffect(() => {
+    if (!mounted) return
     // Check if user has seen onboarding
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
     
@@ -48,7 +55,7 @@ export default function HomeClient({ sharedMoments } : { sharedMoments: SharedMo
     if (!hasSeenOnboarding && !isConnected) {
       setShowOnboarding(true);
     }
-  }, [isConnected]);
+  }, [isConnected, mounted]);
 
   const handleOnboardingComplete = async () => {
     // Mark as seen
@@ -57,18 +64,11 @@ export default function HomeClient({ sharedMoments } : { sharedMoments: SharedMo
     
     // Auto-connect wallet
     try {
-      connect({ connector: connectors[0] });
+      connect({ connector: connectors[0], chainId: polkadotHubTestnet.id });
     } catch (error) {
       console.error('Connection failed:', error);
     }
   };
-
-  // Refresh on address change
-  useEffect(() => {
-    setTimeout(() => {
-      router.refresh()
-    }, 2000)
-  }, [address])
 
   // fetch farcaster data
   useEffect(() => {

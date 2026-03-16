@@ -3,6 +3,7 @@
 import { RARE24_CONTRACT_ADDRESS, RARE24_CONTRACT_ABI, MARKETPLACE_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_ABI } from "./core";
 import { readContract } from "@wagmi/core";
 import { config } from "@/utils/wagmi";
+import { polkadotHubTestnet } from "@/utils/chains";
 import { Config } from "wagmi";
 import { formatEther } from "viem";
 // import { getAllFollowings } from "../backend/farcasterUser";
@@ -16,6 +17,7 @@ import { unstable_cache, revalidateTag } from "next/cache";
 export async function getCreatorMomentsCount(creator_username: string) {
     // get creator's tokenId array
     const tokenIdArray = await readContract(config as Config, {
+        chainId: polkadotHubTestnet.id,
         abi: RARE24_CONTRACT_ABI,
         address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
         functionName: 'getCreatorTokenIds',
@@ -29,6 +31,7 @@ export async function getCreatorMomentsCount(creator_username: string) {
 export async function checkIfCanPost(creator_username: string) {
     // get creator's last post timestamp
     const nextPost = await readContract(config as Config, {
+        chainId: polkadotHubTestnet.id,
         abi: RARE24_CONTRACT_ABI,
         address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
         functionName: 'getCreatorNextPost',
@@ -72,12 +75,14 @@ export async function getCreatorMoments(creator_username: string, creator_addres
         // Fetch earnings and token IDs in parallel
         const [accumEarnings, tokenIdArray] = await Promise.all([
             readContract(config as Config, {
+                chainId: polkadotHubTestnet.id,
                 abi: RARE24_CONTRACT_ABI,
                 address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
                 functionName: 'getCreatorAccruedFunds',
                 args: [creator_address]
             }) as Promise<bigint>,
             readContract(config as Config, {
+                chainId: polkadotHubTestnet.id,
                 abi: RARE24_CONTRACT_ABI,
                 address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
                 functionName: 'getCreatorTokenIds',
@@ -99,6 +104,7 @@ export async function getCreatorMoments(creator_username: string, creator_addres
         // Fetch all NFT details in parallel
         const nftPromises = tokenIdArray.map(tokenId =>
             readContract(config as Config, {
+                chainId: polkadotHubTestnet.id,
                 abi: RARE24_CONTRACT_ABI,
                 address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
                 functionName: 'getPhotoDetails',
@@ -194,6 +200,7 @@ export async function getMomentById(tokenId: number) {
     return unstable_cache(
         async () => {
             const moment = await readContract(config as Config, {
+                chainId: polkadotHubTestnet.id,
                 abi: RARE24_CONTRACT_ABI,
                 address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
                 functionName: 'getPhotoDetails',
@@ -347,6 +354,7 @@ export async function revalidateMomentData(tokenId: number) {
 
 export async function getUserBalance(tokenId: number, address: `0x${string}`) {
     const balance = await readContract(config as Config, {
+        chainId: polkadotHubTestnet.id,
         abi: RARE24_CONTRACT_ABI,
         address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
         functionName: 'balanceOf',
@@ -400,74 +408,80 @@ function getTimeRemaining(futureTimestamp: number) {
 
 export const getTokensListed = unstable_cache(
     async () => {
-        const currentTimestamp = Math.floor(Date.now() / 1000);
-        const MAX_LISTINGS = 20;
+        try {
+            const currentTimestamp = Math.floor(Date.now() / 1000);
+            const MAX_LISTINGS = 20;
 
-        // Fetch listing counter
-        const listingCount = await readContract(config as Config, {
-            abi: MARKETPLACE_CONTRACT_ABI,
-            address: MARKETPLACE_CONTRACT_ADDRESS as `0x${string}`,
-            functionName: 'getListingIdCounter',
-            args: []
-        }) as bigint;
+            // Fetch listing counter
+            const listingCount = await readContract(config as Config, {
+                chainId: polkadotHubTestnet.id,
+                abi: MARKETPLACE_CONTRACT_ABI,
+                address: MARKETPLACE_CONTRACT_ADDRESS as `0x${string}`,
+                functionName: 'getListingIdCounter',
+                args: []
+            }) as bigint;
 
-        const count = Number(listingCount);
-        
-        // Fetch listings in parallel batches
-        const listingPromises = [];
-        for (let i = count; i > 0 && listingPromises.length < MAX_LISTINGS * 2; i--) {
-            listingPromises.push(
+            const count = Number(listingCount);
+            
+            // Fetch listings in parallel batches
+            const listingPromises = [];
+            for (let i = count; i > 0 && listingPromises.length < MAX_LISTINGS * 2; i--) {
+                listingPromises.push(
+                    readContract(config as Config, {
+                        abi: MARKETPLACE_CONTRACT_ABI,
+                        address: MARKETPLACE_CONTRACT_ADDRESS as `0x${string}`,
+                        functionName: 'getSaleListing',
+                        args: [i]
+                    }).then(listing => ({ listing, id: i }))
+                );
+            }
+
+            // Fetch all listings in parallel and filter
+            const allListings = await Promise.all(listingPromises);
+            const activeListings = allListings
+                .filter(({ listing }: any) => 
+                    Number(listing.status) === 0 && 
+                    currentTimestamp <= Number(listing.expiresAt)
+                )
+                .slice(0, MAX_LISTINGS)
+                .map(({ listing }) => listing);
+
+            // Fetch NFT details in parallel
+            const nftDetailsPromises = activeListings.map((listing: any) =>
                 readContract(config as Config, {
-                    abi: MARKETPLACE_CONTRACT_ABI,
-                    address: MARKETPLACE_CONTRACT_ADDRESS as `0x${string}`,
-                    functionName: 'getSaleListing',
-                    args: [i]
-                }).then(listing => ({ listing, id: i }))
+                    abi: RARE24_CONTRACT_ABI,
+                    address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
+                    functionName: 'getPhotoDetails',
+                    args: [listing.tokenId]
+                })
             );
+
+            const detailsResults: any[] = await Promise.all(nftDetailsPromises);
+
+            // Fetch metadata in parallel
+            const metadataPromises = detailsResults.map((nft) => 
+                fetchMetadata(nft.metadataURI)
+            );
+
+            const metadataResults: any[] = await Promise.all(metadataPromises);
+
+            // Combine all data (FIX: your original had [0] instead of [i])
+            return activeListings.map((listing: any, i: number) => ({
+                listingId: Number(listing.listingId),
+                tokenId: Number(listing.tokenId),
+                seller: listing.sellerName as string,
+                price: formatEther(BigInt(listing.pricePerToken)),
+                amount: String(listing.amount),
+                sold: String(listing.sold),
+                creator: detailsResults[i].creator as string,
+                pfpUrl: detailsResults[i].pfpUrl as string,
+                imageUrl: metadataResults[i].image as string,
+                desc: metadataResults[i].desc as string
+            }));
+        } catch (error) {
+            console.error('Error fetching tokens listed:', error);
+            return [];
         }
-
-        // Fetch all listings in parallel and filter
-        const allListings = await Promise.all(listingPromises);
-        const activeListings = allListings
-            .filter(({ listing }: any) => 
-                Number(listing.status) === 0 && 
-                currentTimestamp <= Number(listing.expiresAt)
-            )
-            .slice(0, MAX_LISTINGS)
-            .map(({ listing }) => listing);
-
-        // Fetch NFT details in parallel
-        const nftDetailsPromises = activeListings.map((listing: any) =>
-            readContract(config as Config, {
-                abi: RARE24_CONTRACT_ABI,
-                address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
-                functionName: 'getPhotoDetails',
-                args: [listing.tokenId]
-            })
-        );
-
-        const detailsResults: any[] = await Promise.all(nftDetailsPromises);
-
-        // Fetch metadata in parallel
-        const metadataPromises = detailsResults.map((nft) => 
-            fetchMetadata(nft.metadataURI)
-        );
-
-        const metadataResults: any[] = await Promise.all(metadataPromises);
-
-        // Combine all data (FIX: your original had [0] instead of [i])
-        return activeListings.map((listing: any, i: number) => ({
-            listingId: Number(listing.listingId),
-            tokenId: Number(listing.tokenId),
-            seller: listing.sellerName as string,
-            price: formatEther(BigInt(listing.pricePerToken)),
-            amount: String(listing.amount),
-            sold: String(listing.sold),
-            creator: detailsResults[i].creator as string,
-            pfpUrl: detailsResults[i].pfpUrl as string,
-            imageUrl: metadataResults[i].image as string,
-            desc: metadataResults[i].desc as string
-        }));
     },
     ['getTokensListed'], // cache key
     {
@@ -501,79 +515,85 @@ function formatTime(deadlineTimestamp: number): string {
 
 export const getSharedMoments = unstable_cache(
     async () => {
-        const currentTimestamp = Math.floor(Date.now() / 1000);
-        const MAX_MOMENTS = 20;
+        try {
+            const currentTimestamp = Math.floor(Date.now() / 1000);
+            const MAX_MOMENTS = 20;
 
-        // fetch accounts following
-        // const following = await getAllFollowings(fid)
-        // const followingSet = new Set(following) 
+            // fetch accounts following
+            // const following = await getAllFollowings(fid)
+            // const followingSet = new Set(following) 
 
-        // Fetch listing counter
-        const momentCount = await readContract(config as Config, {
-            abi: RARE24_CONTRACT_ABI,
-            address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
-            functionName: 'getTokenIdCounter',
-            args: []
-        }) as bigint;
+            // Fetch listing counter
+            const momentCount = await readContract(config as Config, {
+                chainId: polkadotHubTestnet.id,
+                abi: RARE24_CONTRACT_ABI,
+                address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
+                functionName: 'getTokenIdCounter',
+                args: []
+            }) as bigint;
 
-        const count = Number(momentCount);
-        
-        // Fetch Moments in parallel batches
-        const momentPromises = [];
-        for (let i = count; i > 0 && momentPromises.length < MAX_MOMENTS * 3; i--) {
-            momentPromises.push(
-                readContract(config as Config, {
-                    abi: RARE24_CONTRACT_ABI,
-                    address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
-                    functionName: 'getPhotoDetails',
-                    args: [i]
-                }).then(moment => ({ moment, id: i }))
+            const count = Number(momentCount);
+            
+            // Fetch Moments in parallel batches
+            const momentPromises = [];
+            for (let i = count; i > 0 && momentPromises.length < MAX_MOMENTS * 3; i--) {
+                momentPromises.push(
+                    readContract(config as Config, {
+                        abi: RARE24_CONTRACT_ABI,
+                        address: RARE24_CONTRACT_ADDRESS as `0x${string}`,
+                        functionName: 'getPhotoDetails',
+                        args: [i]
+                    }).then(moment => ({ moment, id: i }))
+                );
+            }
+
+            // Fetch all listings in parallel and filter
+            const allMoments = await Promise.all(momentPromises);
+            const activeMoments: any[] = allMoments
+                .filter(({ moment }: any) => {
+                    const isActive = currentTimestamp <= Number(moment.expiresAt)
+                    // const isFromFollowing = followingSet.has(moment.creator.toLowerCase());
+                    // return isActive && isFromFollowing
+                    return isActive
+                })
+                .slice(0, MAX_MOMENTS)
+                .map(({ moment }) => moment);
+
+            // Fetch metadata in parallel
+            const metadataPromises = activeMoments.map((nft) => 
+                fetchMetadata(nft.metadataURI)
             );
+            const metadataResults: any[] = await Promise.all(metadataPromises);
+
+            // First, get all unique creators
+            const creators = [...new Set(activeMoments.map((m: any) => m.creator as string))];
+
+            // Fetch all user data in parallel
+            const userDataMap = new Map();
+            await Promise.all(
+                creators.map(async (creator) => {
+                    const userData = await getUserByUsername(creator);
+                    userDataMap.set(creator, userData.success ? userData?.fid : null);
+                })
+            );
+
+            // Then map with the cached data
+            return activeMoments.map((moment: any, i: number) => ({
+                tokenId: Number(moment.tokenId),
+                creator: moment.creator as string,
+                creator_fid: userDataMap.get(moment.creator) as number || null,
+                pfpUrl: moment.pfpUrl as string,
+                price: formatEther(BigInt(moment.price)),
+                amount: String(moment.maxSupply),
+                sold: String(moment.totalMinted),
+                imageUrl: metadataResults[i].image as string,
+                desc: metadataResults[i].desc as string,
+                expires: formatTime(Number(moment.expiresAt))
+            }));
+        } catch (error) {
+            console.error('Error fetching shared moments:', error);
+            return [];
         }
-
-        // Fetch all listings in parallel and filter
-        const allMoments = await Promise.all(momentPromises);
-        const activeMoments: any[] = allMoments
-            .filter(({ moment }: any) => {
-                const isActive = currentTimestamp <= Number(moment.expiresAt)
-                // const isFromFollowing = followingSet.has(moment.creator.toLowerCase());
-                // return isActive && isFromFollowing
-                return isActive
-            })
-            .slice(0, MAX_MOMENTS)
-            .map(({ moment }) => moment);
-
-        // Fetch metadata in parallel
-        const metadataPromises = activeMoments.map((nft) => 
-            fetchMetadata(nft.metadataURI)
-        );
-        const metadataResults: any[] = await Promise.all(metadataPromises);
-
-        // First, get all unique creators
-        const creators = [...new Set(activeMoments.map((m: any) => m.creator as string))];
-
-        // Fetch all user data in parallel
-        const userDataMap = new Map();
-        await Promise.all(
-            creators.map(async (creator) => {
-                const userData = await getUserByUsername(creator);
-                userDataMap.set(creator, userData.success ? userData?.fid : null);
-            })
-        );
-
-        // Then map with the cached data
-        return activeMoments.map((moment: any, i: number) => ({
-            tokenId: Number(moment.tokenId),
-            creator: moment.creator as string,
-            creator_fid: userDataMap.get(moment.creator) as number || null,
-            pfpUrl: moment.pfpUrl as string,
-            price: formatEther(BigInt(moment.price)),
-            amount: String(moment.maxSupply),
-            sold: String(moment.totalMinted),
-            imageUrl: metadataResults[i].image as string,
-            desc: metadataResults[i].desc as string,
-            expires: formatTime(Number(moment.expiresAt))
-        }));
     },
     ['getSharedMoments'], // cache key
     {
@@ -583,7 +603,7 @@ export const getSharedMoments = unstable_cache(
 )
 
 export async function revalidateFeed() {
-  revalidateTag('getSharedMoments', 'max')
+  revalidateTag('shared-moments')
 }
 
 export async function getUserOffersListings(username: string) {
@@ -708,8 +728,13 @@ export async function checkNotification(userAddress: `0x${string}`) {
             ])
 
             const count = Number(offerCount);
+            // const userTokenIds = new Set(
+            //     tokenIds.map(token => token.tokenId)
+            // )
             const userTokenIds = new Set(
-                tokenIds.map(token => token.tokenId)
+                (tokenIds ?? [])
+                    .filter(token => token?.tokenId !== undefined)
+                    .map(token => token.tokenId)
             )
             
             // Fetch listings in parallel batches
