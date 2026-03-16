@@ -42,7 +42,7 @@ export default function RootLayout({
         <Web3Provider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <TopBar />
-            <main className="flex-1 overflow-y-auto">{children}</main>
+            <main className="flex-1 overflow-y-auto md:max-w-xl mx-auto w-full">{children}</main>
             <BottomNavigation />
           </ThemeProvider>
         </Web3Provider>
