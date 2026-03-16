@@ -603,7 +603,7 @@ export const getSharedMoments = unstable_cache(
 )
 
 export async function revalidateFeed() {
-  revalidateTag('shared-moments')
+  revalidateTag('shared-moments', 'max')
 }
 
 export async function getUserOffersListings(username: string) {
