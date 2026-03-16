@@ -13,7 +13,11 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   // Initialize Farcaster SDK on client side
   useEffect(() => {
     const init = async () => {
-      await sdk.actions.ready()
+      try {
+        await sdk.actions.ready()
+      } catch (error) {
+        console.log('Farcaster SDK not available:', error)
+      }
     }
     init()
   }, [])
