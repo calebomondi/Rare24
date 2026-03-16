@@ -2,6 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; connect-src 'self' https: data: blob:; img-src 'self' data: https: blob:; font-src 'self' data:;"
+          }
+        ]
+      }
+    ]
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

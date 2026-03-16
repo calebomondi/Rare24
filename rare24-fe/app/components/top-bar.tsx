@@ -14,7 +14,7 @@ export default function TopBar() {
   const { switchChain, isError } = useSwitchChain()
   const { isConnected, address, chain } = useConnection()
   const connectors = useConnectors()
-  const { connect } = useConnect()
+  const { connect, connectors: connectConnectors } = useConnect()
   const pathname = usePathname()
 
   const { setNotify, setLoading, notify, loading } = useNotificationStore()
@@ -24,6 +24,17 @@ export default function TopBar() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleConnect = () => {
+    const connector = connectors[0]
+    console.log('Connector:', connector)
+    console.log('All connectors:', connectors)
+    if (!connector) {
+      console.error('No wallet connector found')
+      return
+    }
+    connect({ connector, chainId: polkadotHubTestnet.id })
+  }
 
   // Switch network if needed
   useEffect(() => {
@@ -96,11 +107,7 @@ export default function TopBar() {
             {
               !isConnected && mounted && (
                 <button 
-                  onClick={() => {
-                      connect({ connector: connectors[0], chainId: polkadotHubTestnet.id })
-                      console.log(`Address: ${address}`)
-                    }
-                  }
+                  onClick={handleConnect}
                   disabled={isConnected}
                   className={``}
                 >
