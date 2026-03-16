@@ -92,11 +92,15 @@ export default function TopBar() {
               )
             }
           </Link>
-          <div>
+          <div className="cursor-pointer">
             {
               !isConnected && mounted && (
                 <button 
-                  onClick={() => connect({ connector: connectors[0], chainId: polkadotHubTestnet.id })}
+                  onClick={() => {
+                      connect({ connector: connectors[0], chainId: polkadotHubTestnet.id })
+                      console.log(`Address: ${address}`)
+                    }
+                  }
                   disabled={isConnected}
                   className={``}
                 >
