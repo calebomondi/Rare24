@@ -10,6 +10,7 @@ import { simulateContract, writeContract, waitForTransactionReceipt } from "@wag
 import { MARKETPLACE_CONTRACT_ABI, MARKETPLACE_CONTRACT_ADDRESS } from "@/app/blockchain/core";
 import { config } from "@/utils/wagmi";
 import { revalidateUserActivity, revalidateMarketplace, revalidateMomentData } from "@/app/blockchain/getterHooks";
+import { json } from "stream/consumers";
 
 interface Props {
     activity: UserOfferlistings[],
@@ -53,6 +54,7 @@ export default function ProfileClient(
     } else if(activeTab === "holding") {
       setDisplayItems(userNfts)
     }
+    console.log(`items: ${JSON.stringify(displayItems)}, length: ${displayItems.length}`)
   }, [activeTab, moments, userNfts])
 
   const handleCancel = async(type: string, id: number, tokenId: number) => {
@@ -235,7 +237,10 @@ export default function ProfileClient(
           {/* Grid of Items */}
           <div className="">
             {
-              (displayItems.length ?? 0)> 0 && (activeTab == 'moments'  || activeTab == 'holding') ? (
+              (
+                (displayItems ?? []).filter(Boolean).length > 0 &&
+                (activeTab === "moments" || activeTab === "holding")
+              ) ? (
                 <div className="grid grid-cols-2 gap-1">
                   {
                     displayItems.map((item) => (
