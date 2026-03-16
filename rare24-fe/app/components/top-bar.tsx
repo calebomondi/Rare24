@@ -28,12 +28,12 @@ export default function TopBar() {
   const handleConnect = () => {
     const connector = connectors[0]
     console.log('Connector:', connector)
-    console.log('All connectors:', connectors)
     if (!connector) {
       console.error('No wallet connector found')
       return
     }
-    connect({ connector, chainId: polkadotHubTestnet.id })
+    connect({ connector })
+    console.log('Connect called')
   }
 
   // Switch network if needed
