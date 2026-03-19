@@ -3,9 +3,10 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black" alt="Next.js">
   <img src="https://img.shields.io/badge/Solidity-0.8.28-blue" alt="Solidity">
+  <img src="https://img.shields.io/badge/OpenZeppelin-5.0.0-green" alt="OpenZeppelin">
 </p>
 
-Rare24 is a decentralized NFT platform where creators drop one limited-edition photo NFT every 24 hours for fans to mint and collect. The platform enforces automatic royalties on every secondary sale, giving creators a forever source of income from their rarest moments.
+Rare24 is a social platform where creators drop one limited-edition photo NFT every 24 hours for fans to mint and collect. The platform enforces automatic royalties on every secondary sale, giving creators a forever source of income from their rarest moments.
 
 ## Project Structure
 
@@ -64,7 +65,7 @@ See [rare24-contracts/README.md](./rare24-contracts/README.md) for detailed docu
 │  │                     │      │                             │   │
 │  │  • Next.js 16       │      │  • Rare24.sol (ERC-1155)    │   │
 │  │  • TypeScript       │      │  • NftMarketplace.sol       │   │
-│  │  • Wagmi/viem       │      │  • Base blockchain          │   │
+│  │  • Wagmi/viem       │      │  • Polkadot Hub TestNet     │   │
 │  │  • Tailwind CSS     │      │  • OpenZeppelin 5.x         │   │
 │  └──────────┬──────────┘      └──────────────┬──────────────┘   │
 │             │                                │                  │
@@ -73,7 +74,7 @@ See [rare24-contracts/README.md](./rare24-contracts/README.md) for detailed docu
 │  ┌─────────────────────┐      ┌─────────────────────────────┐   │
 │  │   External APIs     │      │       Blockchain            │   │
 │  │                     │      │                             │   │
-│  │  • Neynar (Auth)    │      │  • Base (L2)                │   │
+│  │  • Neynar (Auth)    │      │  • Polkadot Hub TestNet     │   │
 │  │  • Alchemy (NFTs)   │      │  • ERC-1155 tokens          │   │
 │  │  • Pinata (IPFS)    │      │  • Smart contracts          │   │
 │  │  • Neon (Database)  │      │                             │   │
@@ -102,7 +103,7 @@ See [rare24-contracts/README.md](./rare24-contracts/README.md) for detailed docu
 | Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS 4 |
-| Blockchain | Base (Ethereum L2) |
+| Blockchain | Polkadot Hub TestNet |
 | Web3 Libraries | viem, wagmi |
 | Database | Neon (serverless PostgreSQL) |
 | Storage | Pinata (IPFS) |
@@ -123,10 +124,10 @@ See [rare24-contracts/README.md](./rare24-contracts/README.md) for detailed docu
 
 | Network | Contract | Address |
 |---------|----------|---------|
-| Paseo | Rare24 | `0xE28d68A4AC00e3E3fe2C98C5c9B16A4b43c07D73` |
-| Paseo | NftMarketplace | `0x8Bfe72c68E45D8eeeD2a4216474bE534951bf43b` |
+| Paseo | Rare24 | `0xE28d68A4AC00e3E3fe2C98C5c9B16A4b43c07D73` [(deployed & verified)](https://blockscout-testnet.polkadot.io/address/0xE28d68A4AC00e3E3fe2C98C5c9B16A4b43c07D73) |
+| Paseo | NftMarketplace | `0x8Bfe72c68E45D8eeeD2a4216474bE534951bf43b` [(deployed & verified)](https://blockscout-testnet.polkadot.io/address/0x8Bfe72c68E45D8eeeD2a4216474bE534951bf43b) |
 
-## Documentation
+## Detailed Documentation
 
 - [Frontend Documentation](./rare24-fe/README.md)
 - [Smart Contracts Documentation](./rare24-contracts/README.md)

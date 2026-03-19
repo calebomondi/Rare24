@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Rare24** is a mini-app that allows users to collect and trade exclusive photo NFTs from their favorite creators. The platform operates on a "daily drop" model where only one moment (NFT) is released every 24 hours.
+**Rare24** is a social app that allows users to collect and trade exclusive photo NFTs from their favorite creators. The platform operates on a "daily drop" model where only one moment (NFT) is released every 24 hours.
 
 ### Core Features
 - **Daily NFT Drops**: Creators mint exclusive photo NFTs once every 24 hours
@@ -16,7 +16,7 @@
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS 4
-- **Blockchain**: Base (Ethereum L2)
+- **Blockchain**: Polkadot Hub Testnet
 - **Web3 Libraries**: viem, wagmi
 - **Authentication**: Neynar, Farcaster Quick Auth
 - **Database**: Neon (serverless PostgreSQL)

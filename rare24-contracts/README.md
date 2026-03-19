@@ -511,8 +511,8 @@ test/
 
 | Network | Contract | Address |
 |---------|----------|---------|
-| Paseo | Rare24 | `0xE28d68A4AC00e3E3fe2C98C5c9B16A4b43c07D73` (deployed & verified) |
-| Paseo | NftMarketplace | `0x8Bfe72c68E45D8eeeD2a4216474bE534951bf43b` (deployed & verified) |
+| Paseo | Rare24 | `0xE28d68A4AC00e3E3fe2C98C5c9B16A4b43c07D73` [(deployed & verified)](https://blockscout-testnet.polkadot.io/address/0xE28d68A4AC00e3E3fe2C98C5c9B16A4b43c07D73) |
+| Paseo | NftMarketplace | `0x8Bfe72c68E45D8eeeD2a4216474bE534951bf43b` [(deployed & verified)](https://blockscout-testnet.polkadot.io/address/0x8Bfe72c68E45D8eeeD2a4216474bE534951bf43b) |
 
 ---
 
