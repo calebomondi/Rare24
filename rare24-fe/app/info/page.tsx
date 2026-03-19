@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useTheme } from "next-themes"
 
 export default function TermsOfUsePage() {
-  const lastUpdated = "December 19, 2025"
+  const lastUpdated = "March 19, 2026"
   const [openAccordion, setOpenAccordion] = useState<string | null>(null)
   const { theme } = useTheme()
 
